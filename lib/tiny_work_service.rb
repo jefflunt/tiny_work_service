@@ -9,7 +9,7 @@ class TinyWorkService
     @service.msg_handler = self
     @jobs = Queue.new
 
-    Thread.new do
+    @thread = Thread.new do
       loop do
         break unless @service.running?
 
@@ -32,6 +32,11 @@ class TinyWorkService
     else
       raise TinyTCPService::BadClient.new("Client sent invalid message: `#{m[..50]}'")
     end
+  end
+
+  # join the service Thread, if you want to wait until it's done
+  def join
+    @thread.join
   end
 
   # enqueue a job
