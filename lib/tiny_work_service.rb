@@ -4,16 +4,17 @@ require 'tiny_tcp_service'
 #  s = TinyWorkService.new(1234)
 #  s.stop!
 class TinyWorkService
-  def initialize(port)
+  def initialize(port, label='TinyWorkService')
     @service = TinyTCPService.new(port)
     @service.msg_handler = self
     @jobs = Queue.new
+    @label = label
 
     @thread = Thread.new do
       loop do
         break unless @service.running?
 
-        print "\rTinyWorkService #{@jobs.length.to_s.rjust(6)} jobs #{@service.num_clients.to_s.rjust(4)} workers\e[K"
+        print "\r#{@label} #{@jobs.length.to_s.rjust(6)} jobs #{@service.num_clients.to_s.rjust(4)} workers\e[K"
         sleep 0.5
       end
     end
