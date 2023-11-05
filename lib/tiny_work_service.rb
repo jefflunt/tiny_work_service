@@ -10,11 +10,11 @@ class TinyWorkService
     @jobs = Queue.new
     @label = label
 
-    @thread = Thread.new do
+    Thread.new do
       loop do
         break unless @service.running?
 
-        print "\r#{@label} #{@jobs.length.to_s.rjust(6)} jobs #{@service.num_clients.to_s.rjust(4)} workers\e[K"
+        print "\r#{@label}:#{port} #{@jobs.length.to_s.rjust(6)} jobs #{@service.num_clients.to_s.rjust(4)} workers\e[K"
         sleep 0.5
       end
     end
@@ -37,7 +37,7 @@ class TinyWorkService
 
   # join the service Thread, if you want to wait until it's done
   def join
-    @thread.join
+    @service.join
   end
 
   # enqueue a job
