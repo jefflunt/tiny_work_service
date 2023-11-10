@@ -4,18 +4,64 @@ require 'tiny_tcp_service'
 #  s = TinyWorkService.new(1234)
 #  s.stop!
 class TinyWorkService
+  attr_reader :jobs_enqueued,
+              :jobs_dequeued,
+              :jobs_per_minute,
+              :jobs_per_hour
+
   def initialize(port, label='TinyWorkService')
     @service = TinyTCPService.new(port)
     @service.msg_handler = self
     @jobs = Queue.new
     @label = label
 
+    @jobs_enqueued = 0
+    @jobs_dequeued = 0
+    @jobs_to_track = Queue.new
+    @jobs_dequeued_tracker = []
+
+    @jobs_per_minute = 0.0
+    @jobs_per_hour = 0.0
+
+    # status printing thread
     Thread.new do
       loop do
         break unless @service.running?
 
-        print "\r#{@label}:#{port} #{@jobs.length.to_s.rjust(6)} jobs #{@service.num_clients.to_s.rjust(4)} workers\e[K"
+        print "\r#{@label}:#{port} jobs:#{@jobs.length.to_s} workers:#{@service.num_clients.to_s} jobs/m:#{@jobs_per_minute} jobs/h:#{@jobs_per_hour}\e[K"
         sleep 0.5
+      end
+    end
+
+    # update stats thread
+    Thread.new do
+      loop do
+        one_minute_ago = Time.now.to_i - 60
+        one_hour_ago = Time.now.to_i - 3600
+
+        # move jobs_to_track into jobs_dequeued_tracker, threadsafe
+        loop do
+          break if @jobs_to_track.length == 0
+          @jobs_dequeued_tracker << @jobs_to_track.shift
+        end
+
+        # remove job tracking times from older than one_hour_ago
+        loop do
+          break if @jobs_dequeued_tracker.empty? || @jobs_dequeued_tracker.first >= one_hour_ago
+          @jobs_dequeued_tracker.shift
+        end
+
+        counter = 0
+        i = -1
+        loop do
+          break if i.abs > @jobs_dequeued_tracker.length || @jobs_dequeued_tracker[i] < one_minute_ago
+          i -= 1
+          counter += 1
+        end
+        @jobs_per_minute = counter
+        @jobs_per_hour = @jobs_dequeued_tracker.count
+
+        sleep 2
       end
     end
   end
@@ -42,13 +88,19 @@ class TinyWorkService
 
   # enqueue a job
   def <<(j)
+    @jobs_enqueued += 1
     @jobs << j
+
+    nil
   end
 
   # return the first job in the work queue, if there is one present
   # otherwise, return nil
   def shift
     return nil if @jobs.empty?
+    @jobs_dequeued += 1
+    @jobs_to_track << Time.now.to_i
+
     @jobs.shift
   end
 
