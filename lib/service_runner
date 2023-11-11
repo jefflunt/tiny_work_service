@@ -1,0 +1,22 @@
+require 'yaml'
+require_relative './tiny_work_service'
+
+unless ARGV.length == 1
+  puts <<~USAGE
+    ERROR: You must specify a config file
+
+    Ex:
+      ruby service_runner /etc/var/tiny_work_service.config.yml
+  USAGE
+
+  exit 1
+end
+
+config = YAML.load(IO.read(ARGV.shift))
+begin
+  TinyWorkService
+    .new(config['port'], config['label'])
+    .join
+rescue Interrupt
+  puts "\nbye"
+end

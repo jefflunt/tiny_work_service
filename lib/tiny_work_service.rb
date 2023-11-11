@@ -1,7 +1,8 @@
+require 'time'
 require 'tiny_tcp_service'
 
 # usage:
-#  s = TinyWorkService.new(1234)
+#  s = TinyWorkService.new(1234, 'TinyWorkService')
 #  s.stop!
 class TinyWorkService
   attr_reader :jobs_enqueued,
@@ -9,7 +10,7 @@ class TinyWorkService
               :jobs_per_minute,
               :jobs_per_hour
 
-  def initialize(port, label='TinyWorkService')
+  def initialize(port, label)
     @service = TinyTCPService.new(port)
     @service.msg_handler = self
     @jobs = Queue.new
@@ -20,17 +21,25 @@ class TinyWorkService
     @jobs_to_track = Queue.new
     @jobs_dequeued_tracker = []
 
-    @jobs_per_minute = 0.0
-    @jobs_per_hour = 0.0
+    @jobs_per_minute = 0
+    @jobs_per_hour = 0
 
     # status printing thread
     Thread.new do
+      print "\e[?25l" # hide cursor
       loop do
         break unless @service.running?
 
-        print "\r#{@label}:#{port} jobs:#{@jobs.length.to_s} workers:#{@service.num_clients.to_s} jobs/m:#{@jobs_per_minute} jobs/h:#{@jobs_per_hour}\e[K"
+        print "\e[1;1H"
+        puts "#{DateTime.now.iso8601}\e[K"
+        puts "#{@label} on port #{port}\e[K"
+        puts "workers :#{@service.num_clients.to_s.rjust(10)}\e[K"
+        puts "queue   :#{@jobs.length.to_s.rjust(10)}\e[K"
+        puts "jobs/m  :#{@jobs_per_minute.to_s.rjust(10)}\e[K"
+        print "jobs/h  :#{@jobs_per_hour.to_s.rjust(10)}\e[K"
         sleep 0.5
       end
+      print "\e[?25h" # show cursor
     end
 
     # update stats thread
