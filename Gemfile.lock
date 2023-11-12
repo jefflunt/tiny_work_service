@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    tiny_work_service (2.0.0)
+    tiny_work_service (2.0.1)
       tiny_tcp_service (>= 1.4)
 
 GEM
@@ -11,6 +11,7 @@ GEM
 
 PLATFORMS
   x86_64-darwin-21
+  x86_64-darwin-22
 
 DEPENDENCIES
   tiny_work_service!

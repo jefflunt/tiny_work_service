@@ -32,7 +32,7 @@ class TinyWorkService
 
         print "\e[1;1H"
         puts "#{DateTime.now.iso8601}\e[K"
-        puts "#{@label} on port #{port}\e[K"
+        puts "#{@label}:#{port}\e[K"
         puts "workers :#{@service.num_clients.to_s.rjust(10)}\e[K"
         puts "queue   :#{@jobs.length.to_s.rjust(10)}\e[K"
         puts "jobs/m  :#{@jobs_per_minute.to_s.rjust(10)}\e[K"
