@@ -1,13 +1,13 @@
 PATH
   remote: .
   specs:
-    tiny_work_service (2.0.1)
+    tiny_work_service (3.0.0)
       tiny_tcp_service (>= 1.4)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    tiny_tcp_service (1.4.0)
+    tiny_tcp_service (1.4.1)
 
 PLATFORMS
   x86_64-darwin-21
