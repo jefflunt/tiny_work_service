@@ -15,7 +15,7 @@ end
 config = YAML.load(IO.read(ARGV.shift))
 begin
   TinyWorkService
-    .new(config['port'], config['label'])
+    .new(config['port'], config['label'], config['refresh_interval_in_seconds'])
     .join
 rescue Interrupt
   puts "\nbye"

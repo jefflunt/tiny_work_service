@@ -10,11 +10,12 @@ class TinyWorkService
               :jobs_per_minute,
               :jobs_per_hour
 
-  def initialize(port, label)
+  def initialize(port, label, refresh_interval_in_seconds)
     @service = TinyTCPService.new(port)
     @service.msg_handler = self
     @jobs = Queue.new
     @label = label
+    @label_and_port = "#{@label}:#{port}"
 
     @jobs_enqueued = 0
     @jobs_dequeued = 0
@@ -26,18 +27,22 @@ class TinyWorkService
 
     # status printing thread
     Thread.new do
+      start_time = Time.now
       print "\e[?25l" # hide cursor
       loop do
         break unless @service.running?
+        sec_runtime = Time.now - start_time
+        human_runtime = "%02d:%02d:%02d" % [sec_runtime / 3600, sec_runtime / 60 % 60, sec_runtime % 60]
 
         print "\e[1;1H"
-        puts "#{DateTime.now.iso8601}\e[K"
-        puts "#{@label}:#{port}\e[K"
-        puts "workers :#{@service.num_clients.to_s.rjust(10)}\e[K"
-        puts "queue   :#{@jobs.length.to_s.rjust(10)}\e[K"
-        puts "jobs/m  :#{@jobs_per_minute.to_s.rjust(10)}\e[K"
-        print "jobs/h  :#{@jobs_per_hour.to_s.rjust(10)}\e[K"
-        sleep 0.5
+        puts "label/port: #{@label_and_port.rjust(28)}\e[K"
+        puts "time      : #{DateTime.now.iso8601.rjust(28)}\e[K"
+        puts "runtime   : #{human_runtime.rjust(28)}\e[K"
+        puts "workers   : #{@service.num_clients.to_s.rjust(28)}\e[K"
+        puts "queue     : #{@jobs.length.to_s.rjust(28)}\e[K"
+        puts "jobs/m    : #{@jobs_per_minute.to_s.rjust(28)}\e[K"
+        print "jobs/h    : #{@jobs_per_hour.to_s.rjust(28)}\e[K"
+        sleep refresh_interval_in_seconds
       end
       print "\e[?25h" # show cursor
     end
