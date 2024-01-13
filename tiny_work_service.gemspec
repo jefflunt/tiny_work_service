@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "tiny_work_service"
-  s.version     = "3.0.0"
+  s.version     = "3.1.0"
   s.description = "uses the tiny_tcp_service gem to implement a network job queue"
   s.summary     = "uses the tiny_tcp_service gem to implement a network job queue"
   s.authors     = ["Jeff Lunt"]
