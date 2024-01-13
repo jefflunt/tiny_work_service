@@ -24,6 +24,7 @@ class TinyWorkService
 
     @jobs_per_minute = 0
     @jobs_per_hour = 0
+    @errors_total = 0
 
     # status printing thread
     Thread.new do
@@ -41,7 +42,8 @@ class TinyWorkService
         puts "workers   : #{@service.num_clients.to_s.rjust(28)}\e[K"
         puts "queue     : #{@jobs.length.to_s.rjust(28)}\e[K"
         puts "jobs/m    : #{@jobs_per_minute.to_s.rjust(28)}\e[K"
-        print "jobs/h    : #{@jobs_per_hour.to_s.rjust(28)}\e[K"
+        puts "jobs/h    : #{@jobs_per_hour.to_s.rjust(28)}\e[K"
+        print "errors    : #{@errors_total.to_s.rjust(28)}\e[K"
         sleep refresh_interval_in_seconds
       end
       print "\e[?25h" # show cursor
@@ -90,6 +92,8 @@ class TinyWorkService
       'ok'                  # ok, job received
     when m[0] == '-'        # take a job from the queue
       shift || ''
+    when m[0] == '!'        # register an error
+      @errors_total += 1
     else
       raise TinyTCPService::BadClient.new("Client sent invalid message: `#{m[..50]}'")
     end
