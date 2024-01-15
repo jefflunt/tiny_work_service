@@ -1,12 +1,14 @@
 PATH
   remote: .
   specs:
-    tiny_work_service (3.0.0)
+    tiny_work_service (3.2.0)
+      tiny_eta (>= 1.0)
       tiny_tcp_service (>= 1.4)
 
 GEM
   remote: https://rubygems.org/
   specs:
+    tiny_eta (1.0.2)
     tiny_tcp_service (1.4.1)
 
 PLATFORMS

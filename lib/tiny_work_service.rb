@@ -1,5 +1,6 @@
 require 'time'
 require 'tiny_tcp_service'
+require 'tiny_eta'
 
 # usage:
 #  s = TinyWorkService.new(1234, 'TinyWorkService')
@@ -25,6 +26,8 @@ class TinyWorkService
     @jobs_per_minute = 0
     @jobs_per_hour = 0
     @errors_total = 0
+    @last_insert_time = Time.now
+    @last_insert_queue_count = [@jobs.length, 1].max
 
     # status printing thread
     Thread.new do
@@ -34,6 +37,9 @@ class TinyWorkService
         break unless @service.running?
         sec_runtime = Time.now - start_time
         human_runtime = "%02d:%02d:%02d" % [sec_runtime / 3600, sec_runtime / 60 % 60, sec_runtime % 60]
+        elapsed_time_since_last_insert = Time.now - @last_insert_time
+        jobs_completed_since_last_insert = @last_insert_queue_count - @jobs.length
+        percent_completed_since_last_insert = jobs_completed_since_last_insert / @last_insert_queue_count.to_f
 
         print "\e[1;1H"
         puts "label/port: #{@label_and_port.rjust(28)}\e[K"
@@ -43,7 +49,9 @@ class TinyWorkService
         puts "queue     : #{@jobs.length.to_s.rjust(28)}\e[K"
         puts "jobs/m    : #{@jobs_per_minute.to_s.rjust(28)}\e[K"
         puts "jobs/h    : #{@jobs_per_hour.to_s.rjust(28)}\e[K"
-        print "errors    : #{@errors_total.to_s.rjust(28)}\e[K"
+        puts "errors    : #{@errors_total.to_s.rjust(28)}\e[K"
+        print "eta       : #{TinyEta.eta(elapsed_time_since_last_insert, percent_completed_since_last_insert ).rjust(28)}\e[K"
+
         sleep refresh_interval_in_seconds
       end
       print "\e[?25h" # show cursor
@@ -89,6 +97,10 @@ class TinyWorkService
     case
     when m[0] == '+'        # add a job to the queue
       self << m[1..]
+
+      @last_insert_time = Time.now
+      @last_insert_queue_count = @jobs.length
+
       'ok'                  # ok, job received
     when m[0] == '-'        # take a job from the queue
       shift || ''
